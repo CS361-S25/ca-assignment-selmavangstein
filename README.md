@@ -14,9 +14,9 @@ Most configurations tested end up in a large rain-like pattern that I found pret
 
 Each cell is updated according to:
 - A **sigmoid function** of the sum of its **east and north** neighbors:  
-  \[
-  \text{value} = \frac{1}{1 + e^{-3(\text{sum} - 1)}}
-  \]
+  $$\[
+  \text{new_value} = \frac{1}{1 + e^{-3(\text{sum} - 1)}}
+  \]$$
 - If a cell has **exactly 1 active neighbor** (value > 0.5), it is **turned up to max (1.0)**.
 
 ## Initial Configurations
