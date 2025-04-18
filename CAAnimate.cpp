@@ -87,36 +87,47 @@ private:
         */
     }
 
+    void ComputeNeighbors(int x_coord, int y_coord, float& sum_neighbors, int& num_neighbors) {
+        /*Computes the sum of neighbors and the number of active neighbors*/
+        for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -1; dy <= 1; ++dy) {
+                if (dx == 0 && dy == 0) continue;
+
+                int neighbor_x_coord = emp::Mod(x_coord + dx, num_w_boxes);
+                int neighbor_y_coord = emp::Mod(y_coord + dy, num_h_boxes);
+
+                if ((dx == 0 && dy == -1) || (dx == 1 && dy == 0)) { // only north and east neighbors contribute
+                    sum_neighbors += cells[neighbor_x_coord][neighbor_y_coord];
+                }
+
+                if (cells[neighbor_x_coord][neighbor_y_coord] > 0.5) {
+                    num_neighbors++;
+                }
+            }
+        }
+    }
+
+    float ComputeNewValue(float sum_neighbors, int num_neighbors) {
+        /*Computes the new value for a cell based on its neighbors*/
+        float updated_value = 1.0 / (1.0 + exp(-3.0 * (sum_neighbors - 1.0)));
+        if (num_neighbors == 1) {
+            updated_value = 1.0; // override if exactly one strong active neighbor
+        }
+        return updated_value;
+    }
+
     void UpdateCells(std::vector<std::vector<float>>& new_cells) {
         /*Iterates through the cells, updating their values based on their neighbours*/
-        for (int x = 0; x < num_w_boxes; x++) {
-            for (int y = 0; y < num_h_boxes; y++) {
-                float sum = 0.0;
+        for (int x_coord = 0; x_coord < num_w_boxes; x_coord++) {
+            for (int y_coord = 0; y_coord < num_h_boxes; y_coord++) {
+                float sum_neighbors = 0.0;
                 int num_neighbors = 0;
 
-                for (int dx = -1; dx <= 1; ++dx) {
-                    for (int dy = -1; dy <= 1; ++dy) {
-                        if (dx == 0 && dy == 0) continue;
+                // Compute the sum of neighbors and the number of active neighbors
+                ComputeNeighbors(x_coord, y_coord, sum_neighbors, num_neighbors);
 
-                        int nx = emp::Mod(x + dx, num_w_boxes);
-                        int ny = emp::Mod(y + dy, num_h_boxes);
-
-                        if ((dx == 0 && dy == -1) || (dx == 1 && dy == 0)) { // only north and east neighbors contribute
-                            sum += cells[nx][ny];
-                        }
-
-                        if (cells[nx][ny] > 0.5) {
-                            num_neighbors++;
-                        }
-                    }
-                }
-
-                float updated_value = 1.0 / (1.0 + exp(-3.0 * (sum - 1.0)));
-                if (num_neighbors == 1) {
-                    updated_value = 1.0; // override if exactly one strong active neighbor
-                }
-
-                new_cells[x][y] = updated_value;
+                // Update the new value for the cell based on its neighbors
+                new_cells[x_coord][y_coord] = ComputeNewValue(sum_neighbors, num_neighbors);
             }
         }
     }
